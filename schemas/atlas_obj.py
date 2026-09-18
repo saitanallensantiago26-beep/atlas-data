@@ -6,7 +6,8 @@ from .atlas_id import (
     TACTIC_ID_REGEX_EXACT,
     TECHNIQUE_ID_REGEX_EXACT,
     SUBTECHNIQUE_ID_REGEX_EXACT,
-    CASE_STUDY_ID_REGEX_EXACT
+    CASE_STUDY_ID_REGEX_EXACT,
+    MITIGATION_ID_REGEX_EXACT
 )
 
 """Describes ATLAS object schemas.
@@ -23,7 +24,8 @@ tactic_schema = Schema(
         "name": str,
     },
     name="tactic",
-    as_reference=True
+    as_reference=True,
+    ignore_extra_keys=True
 )
 
 technique_schema = Schema(
@@ -37,7 +39,8 @@ technique_schema = Schema(
         ]
     },
     name="technique",
-    as_reference=True
+    as_reference=True,
+    ignore_extra_keys=True
 )
 
 subtechnique_schema = Schema(
@@ -49,9 +52,11 @@ subtechnique_schema = Schema(
         "subtechnique-of": TECHNIQUE_ID_REGEX_EXACT # Top-level technique ID
     },
     name="subtechnique",
-    as_reference=True
+    as_reference=True,
+    ignore_extra_keys=True
 )
 
+CASE_STUDY_VERSION = '1.1'
 case_study_schema = Schema(
     {
         "id": CASE_STUDY_ID_REGEX_EXACT,
@@ -70,7 +75,10 @@ case_study_schema = Schema(
                 "description": str
             }
         ],
-        "reported-by": str,
+        Optional("reporter"): str,
+        Optional("target"): str,
+        Optional("actor"): str,
+        Optional("case-study-type"): Or('incident', 'exercise'),
         Optional("references"): Or(
             [
                 {
@@ -78,9 +86,34 @@ case_study_schema = Schema(
                     "url": Or(str, None)
                 }
             ]
-            , None
+            , []
         )
     },
     name="case_study",
     as_reference=True
+)
+
+mitigation_schema = Schema(
+    {
+        "id": MITIGATION_ID_REGEX_EXACT,
+        "object-type": "mitigation",
+        "name": str,
+        "description": str,
+        Optional("techniques"): [
+            Or(
+                TECHNIQUE_ID_REGEX_EXACT,   # top-level techniquye
+                SUBTECHNIQUE_ID_REGEX_EXACT, # subtechnique
+                {   # Specific mitigation for each technique
+                    "id": Or (
+                        TECHNIQUE_ID_REGEX_EXACT,
+                        SUBTECHNIQUE_ID_REGEX_EXACT
+                    ),
+                    "use": str
+                }
+            ),
+        ]
+    },
+    name="mitigation",
+    as_reference=True,
+    ignore_extra_keys=True
 )

@@ -1,5 +1,5 @@
 {
-    "description": "Generated on 2022-04-28",
+    "description": "Generated on 2022-07-08",
     "type": "object",
     "properties": {
         "study": {
@@ -12,8 +12,16 @@
                     "type": "string"
                 },
                 "incident-date": {
-                    "type": "string",
-                    "format": "date"
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    ]
                 },
                 "incident-date-granularity": {
                     "enum": [
@@ -52,8 +60,20 @@
                         "additionalProperties": true
                     }
                 },
-                "reported-by": {
+                "reporter": {
                     "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "actor": {
+                    "type": "string"
+                },
+                "case-study-type": {
+                    "enum": [
+                        "incident",
+                        "exercise"
+                    ]
                 },
                 "references": {
                     "anyOf": [
@@ -91,7 +111,7 @@
                             }
                         },
                         {
-                            "const": null
+                            "type": "array"
                         }
                     ]
                 },
@@ -100,6 +120,10 @@
                 },
                 "object-type": {
                     "const": "case-study"
+                },
+                "reported-by": {
+                    "deprecated": "true",
+                    "depMessage": "`reported-by` deprecated as of version 1.1; replaced by `reporter`"
                 }
             },
             "required": [
@@ -107,8 +131,7 @@
                 "summary",
                 "incident-date",
                 "incident-date-granularity",
-                "procedure",
-                "reported-by"
+                "procedure"
             ],
             "additionalProperties": true
         },
@@ -129,19 +152,20 @@
     "definitions": {
         "id_tactic": {
             "type": "string",
-            "pattern": "^AML\\.TA\\d{4}$"
+            "pattern": "^(?:[A-Z]+\\d*\\.)+TA\\d{4}$"
         },
         "id_technique": {
             "type": "string",
-            "pattern": "^AML\\.T\\d{4}$"
+            "pattern": "^(?:[A-Z]+\\d*\\.)+T\\d{4}$"
         },
         "id_subtechnique": {
             "type": "string",
-            "pattern": "^AML\\.T\\d{4}\\.\\d{3}$"
+            "pattern": "^(?:[A-Z]+\\d*\\.)+T\\d{4}\\.\\d{3}$"
         },
         "id_case_study": {
             "type": "string",
-            "pattern": "^AML\\.CS\\d{4}$"
+            "pattern": "^(?:[A-Z]+\\d*\\.)+CS\\d{4}$"
         }
-    }
+    },
+    "$version": "1.1"
 }

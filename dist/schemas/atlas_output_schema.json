@@ -1,5 +1,5 @@
 {
-    "description": "Generated on 2022-04-28",
+    "description": "Generated on 2022-08-31",
     "type": "object",
     "properties": {
         "id": {
@@ -21,23 +21,44 @@
                 }
             ]
         },
-        "tactics": {
+        "matrices": {
             "type": "array",
             "items": {
-                "$ref": "#/definitions/tactic"
-            }
-        },
-        "techniques": {
-            "type": "array",
-            "items": {
-                "anyOf": [
-                    {
-                        "$ref": "#/definitions/technique"
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
                     },
-                    {
-                        "$ref": "#/definitions/subtechnique"
+                    "name": {
+                        "type": "string"
+                    },
+                    "tactics": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/tactic"
+                        }
+                    },
+                    "techniques": {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/definitions/technique"
+                                },
+                                {
+                                    "$ref": "#/definitions/subtechnique"
+                                }
+                            ]
+                        }
                     }
-                ]
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "tactics",
+                    "techniques"
+                ],
+                "additionalProperties": true
             }
         },
         "case-studies": {
@@ -51,14 +72,12 @@
         "id",
         "name",
         "version",
-        "tactics",
-        "techniques",
-        "case-studies"
+        "matrices"
     ],
-    "additionalProperties": false,
-    "$id": "atlas_matrix_schema",
+    "additionalProperties": true,
+    "$id": "atlas_output_schema",
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "ATLAS Matrix Schema",
+    "title": "ATLAS Output Schema",
     "definitions": {
         "tactic": {
             "type": "object",
@@ -86,7 +105,7 @@
         },
         "id_tactic": {
             "type": "string",
-            "pattern": "^AML\\.TA\\d{4}$"
+            "pattern": "^(?:[A-Z]+\\d*\\.)+TA\\d{4}$"
         },
         "technique": {
             "type": "object",
@@ -121,7 +140,7 @@
         },
         "id_technique": {
             "type": "string",
-            "pattern": "^AML\\.T\\d{4}$"
+            "pattern": "^(?:[A-Z]+\\d*\\.)+T\\d{4}$"
         },
         "subtechnique": {
             "type": "object",
@@ -153,7 +172,7 @@
         },
         "id_subtechnique": {
             "type": "string",
-            "pattern": "^AML\\.T\\d{4}\\.\\d{3}$"
+            "pattern": "^(?:[A-Z]+\\d*\\.)+T\\d{4}\\.\\d{3}$"
         },
         "case_study": {
             "type": "object",
@@ -210,8 +229,20 @@
                         "additionalProperties": false
                     }
                 },
-                "reported-by": {
+                "reporter": {
                     "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "actor": {
+                    "type": "string"
+                },
+                "case-study-type": {
+                    "enum": [
+                        "incident",
+                        "exercise"
+                    ]
                 },
                 "references": {
                     "anyOf": [
@@ -249,7 +280,7 @@
                             }
                         },
                         {
-                            "const": null
+                            "type": "array"
                         }
                     ]
                 }
@@ -261,14 +292,13 @@
                 "summary",
                 "incident-date",
                 "incident-date-granularity",
-                "procedure",
-                "reported-by"
+                "procedure"
             ],
             "additionalProperties": false
         },
         "id_case_study": {
             "type": "string",
-            "pattern": "^AML\\.CS\\d{4}$"
+            "pattern": "^(?:[A-Z]+\\d*\\.)+CS\\d{4}$"
         }
     }
 }

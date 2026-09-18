@@ -2,7 +2,7 @@
 
 ATLAS enables researchers to navigate the landscape of threats to artificial intelligence and machine learning systems.  Visit https://atlas.mitre.org for more information.
 
-This repository contains the tactics, techniques, and case studies data used by the ATLAS website and associated tools.
+This repository contains tactics, techniques, case studies, and other data used by the ATLAS website and associated tools.
 
 ## Distributed files
 
@@ -13,15 +13,20 @@ Located the `dist` directory:
     + See the schemas and usage below for more details. Top-level keys include:
         ```yaml
         id: ATLAS
-        name: ATLAS Machine Learning Threat Matrix
+        name: Adversarial Threat Landscape for AI Systems
         version: Version number for this data release
-        tactics: List of tactics objects
-        techniques: List of technique and subtechnique objects
+
+        matrices: List of matrix data
+        - id: ATLAS
+          name: ATLAS Machine Learning Threat Matrix
+          tactics: List of tactics objects
+          techniques: List of technique and subtechnique objects
+
         case-studies: List of case study objects
         ```
 - `schemas/`
     + Optional JSON Schema files for validation use
-    + `atlas_matrix_schema.json`
+    + `atlas_output_schema.json`
         * Describes the `ATLAS.yaml` format
     + `atlas_website_case_study_schema.json`
         * Describes the case study file format
@@ -62,8 +67,10 @@ with open(atlas_data_filepath) as f:
     # Parse YAML
     data = yaml.safe_load(f)
 
-    tactics = data['tactics']
-    techniques = data['techniques']
+    first_matrix = data['matrices'][0]
+    tactics = first_matrix['tactics']
+    techniques = first_matrix['techniques']
+
     studies = data['case-studies']
 ```
 
@@ -77,8 +84,11 @@ fs.readFile(atlas_data_filepath, 'utf-8', (_, contents) => {
     // Parse YAML
     const data = yaml.load(contents)
 
-    const tactics = data['tactics']
-    const techniques = data['techniques']
+    const first_matrix = data['matrices'][0]
+
+    const tactics = first_matrix['tactics']
+    const techniques = first_matrix['techniques']
+
     const studies = data['case-studies']
 })
 ```

@@ -16,7 +16,8 @@ REGEX_MARKDOWN_LINK = re.compile(r'\[([^\[]+)\]\((.*?)\)')
 
 # Fully-qualified URLs
 # https://stackoverflow.com/a/17773849
-REGEX_URL = re.compile(r'^(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})$')
+REGEX_URL = re.compile(r'(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})')
+REGEX_URL_EXACT = re.compile(rf'^{REGEX_URL.pattern}$')
 
 # Internal Markdown links, assumed to be only to /tactics/ and /techniques/
 # Note that the regex objects here are from conftest.py and are the schema library's objects, hence the pattern_str property
@@ -27,6 +28,10 @@ REGEX_INTERNAL_URL = re.compile(
     r'|'
     rf'/techniques/{TECHNIQUE_ID_PATTERN}$'
     )
+
+# Capitalized acronym-like words, including possessive (') and plural versions (s)
+# Example matches: AI, AI's, AIs, ATT&CK
+REGEX_ACRONYM = re.compile(r"\b[A-Z&]+[']{0,1}[s]{0,1}\b")
 
 def test_markdown_link(text_with_possible_markdown_syntax):
     """Validates Markdown link syntax for internal and external links.
@@ -57,7 +62,7 @@ def test_markdown_link(text_with_possible_markdown_syntax):
             # URLs should not be empty
             errors.append(f'Got empty URL for Markdown link with title [{title}]')
 
-        elif url.startswith('http') and REGEX_URL.match(url) is None:
+        elif url.startswith('http') and REGEX_URL_EXACT.match(url) is None:
             # Ensure that external URL is fully-qualified and doesn't contain invalid characters
             errors.append(f'Expected a fully-qualified URL, got ({url})')
 
@@ -71,6 +76,8 @@ def test_markdown_link(text_with_possible_markdown_syntax):
         error_str = '\n'.join(errors)
         pytest.fail(error_str)
 
+# Inline Markdown code
+REGEX_INLINE_CODE = re.compile(r'`{1}(.+)`{1}')
 
 # Parses out string tokens to be spell checked
 REGEX_WORDS = re.compile(
@@ -94,6 +101,12 @@ def test_spelling(text_to_be_spellchecked):
     text = text_to_be_spellchecked[1]
     # Remove Markdown links
     stripped_text = REGEX_MARKDOWN_LINK.sub('', text)
+    # Remove inline code, content surrounded by one backtick
+    stripped_text = REGEX_INLINE_CODE.sub('', stripped_text)
+    # Remove URLs
+    stripped_text = REGEX_URL.sub('', stripped_text)
+    # Remove acronym-like words
+    stripped_text = REGEX_ACRONYM.sub('', stripped_text)
     # Tokenize, see comments above at variable declaration
     text_tokens = REGEX_WORDS.findall(stripped_text)
 
@@ -132,3 +145,58 @@ def test_ascii(text_to_be_spellchecked):
         # Potentially an unicode quote or similar
         msg = f'Contains non-ascii, consider fixing. YAML output will be the literal string: {ascii(text)}'
         warnings.warn(msg)
+
+def test_check_unique_ids(all_data_objects):
+    """ Warns for duplicate IDs in tactics, techniques, case studies, etc. """
+
+    # Creates a list of IDs from all_data_objects, which may contain duplicates
+    all_ids = [ids[0] for ids in all_data_objects]
+
+    # Creates a list of 3-element tuples that hold the duplicate IDs, name, and object type
+    # Sorted is needed to print the IDs in order
+    list_of_duplicate_objects = sorted([(ids[0], ids[1]['name'], ids[1]['object-type']) for ids in all_data_objects if all_ids.count(ids[0]) > 1])
+    list_of_duplicate_ids = sorted(set([id[0] for id in list_of_duplicate_objects]))
+
+    if len(list_of_duplicate_objects) > 0:
+
+        # Variables needed to turn number of duplicates into string to use in error msg
+        num_of_duplicates_as_str = str(len(list_of_duplicate_ids))
+        total_num_of_duplicates_as_str = str(len(list_of_duplicate_objects))
+
+        # Main error message
+        error_msg = F"Duplicate ID(s) detected: {num_of_duplicates_as_str} ID(s) found for {total_num_of_duplicates_as_str} data objects."
+
+        # Adds duplicate ID info (ID, name, object type)
+        for dup_id in range(len(list_of_duplicate_ids)):
+            tactic_name = [obj[2] for obj in list_of_duplicate_objects if obj[0] == list_of_duplicate_ids[dup_id]]
+            error_msg += F"\n\t  {list_of_duplicate_ids[dup_id]}: {tactic_name[0].capitalize()}"
+            for dup_object in list_of_duplicate_objects:
+                if dup_object[0] == list_of_duplicate_ids[dup_id]:
+                    error_msg += F"\n\t\t {dup_object[1]}"
+
+        pytest.fail(error_msg)
+
+def test_procedure_step_match(procedure_steps, technique_id_to_tactic_ids):
+    """ Warns for unmatched techniques and tactics in case study procedures. """
+    # Unwrap procedure step
+    step = procedure_steps[1]
+    technique_id = step['technique']
+    tactic_id = step['tactic']
+
+    # Determine the correct tactics associated with the technique
+    if technique_id in technique_id_to_tactic_ids:
+        correct_tactics = technique_id_to_tactic_ids[technique_id]
+    else:
+        # Object is a subtechnique, trim off last 4 chars to find the parent technique ID
+        technique_id = technique_id[:-4]
+        # Re-determine associated tactics
+        if technique_id in technique_id_to_tactic_ids:
+            correct_tactics = technique_id_to_tactic_ids[technique_id]
+        else:
+            # Otherwise error
+            raise ValueError(f'Technique ID to tactic ID mapping not found for {technique_id}')
+
+    # Fail test if the step tactic is not one of the associated tactics for the step technique
+    if tactic_id not in correct_tactics:
+        error_msg = f'Technique {step["technique"]} has tactic {tactic_id}, expected one of {correct_tactics}'
+        pytest.fail(error_msg)

@@ -15,6 +15,9 @@
 # - &short_name
 #   id: AML.T0049
 #   name: Example Technique
+#   ATT&CK-reference:
+#      id: TA0000
+#      url: https://attack.mitre.org/techniques/TA0000
 #   description: |
 #     The description of the technique.
 #   tactics:
@@ -117,6 +120,9 @@
   id: AML.T0006
   name: Active Scanning
   object-type: technique
+  ATT&CK-reference:
+    id: T1595
+    url: https://attack.mitre.org/techniques/T1595/
   description: |
     An adversary may probe or scan the victim system to gather information for targeting.
     This is distinct from other reconnaissance techniques that do not involve direct interaction with the victim system.
@@ -163,7 +169,7 @@
     Adversaries may acquire public models to use in their operations.
     Adversaries may seek models used by the victim organization or models that are representative of those used by the victim organization.
     Representative models may include model architectures, or pre-trained models which define the architecture as well as model parameters from training on a dataset.
-    The adversary may search public sources for common model architecture configuration file formats such as yaml or python configuration files, and common model storage file formats such as ONNX (.onnx), HDF5 (.h5), Pickle (.pkl), PyTorch (.pth), or TensorFlow (.pb, .tflite).
+    The adversary may search public sources for common model architecture configuration file formats such as YAML or Python configuration files, and common model storage file formats such as ONNX (.onnx), HDF5 (.h5), Pickle (.pkl), PyTorch (.pth), or TensorFlow (.pb, .tflite).
 
     Acquired models are useful in advancing the adversary's operations and are frequently used to tailor attacks to the victim model.
   subtechnique-of: "{{acquire_ml_artifacts.id}}"
@@ -172,6 +178,9 @@
   id: AML.T0016
   name: Obtain Capabilities
   object-type: technique
+  ATT&CK-reference:
+    id: T1588
+    url: https://attack.mitre.org/techniques/T1588/
   description:
     Adversaries may search for and obtain software capabilities for use in their operations.
 
@@ -195,6 +204,9 @@
   id: AML.T0016.001
   name: Software Tools
   object-type: technique
+  ATT&CK-reference:
+    id: T1588.002
+    url: https://attack.mitre.org/techniques/T1588/002/
   description: >
     Adversaries may search for and obtain software tools to support their operations.
     Software designed for legitimate use may be repurposed by an adversary for malicious intent.
@@ -325,7 +337,7 @@
   object-type: technique
   description: |
     Adversaries may gain access to a model via legitimate access to the inference API.
-    Inference API access can be a source of information to the adversary ([{{discover_model_ontology.name}}](/techniques/{{discover_model_ontology.id}}), [{{discover_model_family.name}}](/techniques/{{discover_model_ontology.id}})), a means of staging the attack ([{{verify_attack.name}}](/techniques/{{verify_attack.id}}), [{{craft_adv.name}}](/techniques/{{craft_adv.id}})), or for introducing data to the target system for Impact ([{{evade_model.name}}](/techniques/{{evade_model.id}}), [{{erode_integrity.name}}](/techniques/{{erode_integrity.id}})).
+    Inference API access can be a source of information to the adversary ([{{discover_model_ontology.name}}](/techniques/{{discover_model_ontology.id}}), [{{discover_model_family.name}}](/techniques/{{discover_model_family.id}})), a means of staging the attack ([{{verify_attack.name}}](/techniques/{{verify_attack.id}}), [{{craft_adv.name}}](/techniques/{{craft_adv.id}})), or for introducing data to the target system for Impact ([{{evade_model.name}}](/techniques/{{evade_model.id}}), [{{erode_integrity.name}}](/techniques/{{erode_integrity.id}})).
   tactics:
     - "{{ml_model_access.id}}"
 
@@ -406,6 +418,9 @@
   id: AML.T0021
   name: Establish Accounts
   object-type: technique
+  ATT&CK-reference:
+    id: T1585
+    url: https://attack.mitre.org/techniques/T1585/
   description: |
     Adversaries may create accounts with various services for use in targeting, to gain access to resources needed in [{{ml_attack_staging.name}}](/tactics/{{ml_attack_staging.id}}), or for victim impersonation.
   tactics:
@@ -469,6 +484,9 @@
   id: AML.T0011
   name: User Execution
   object-type: technique
+  ATT&CK-reference:
+    id: T1204
+    url: https://attack.mitre.org/techniques/T1204/
   description: |
     An adversary may rely upon specific actions by a user in order to gain execution.
     Users may inadvertently execute unsafe code introduced via [{{supply_chain.name}}](/techniques/{{supply_chain.id}}).
@@ -493,6 +511,9 @@
   id: AML.T0012
   name: Valid Accounts
   object-type: technique
+  ATT&CK-reference:
+    id: T1078
+    url: https://attack.mitre.org/techniques/T1078/
   description: |
     Adversaries may obtain and abuse credentials of existing accounts as a means of gaining Initial Access.
     Credentials may take the form of usernames and passwords of individual user accounts or API keys that provide access to various ML resources and services.
@@ -511,6 +532,7 @@
     This technique can be used to evade a downstream task where machine learning is utilized.
     The adversary may evade machine learning based virus/malware detection, or network scanning towards the goal of a traditional cyber attack.
   tactics:
+    - "{{initial_access.id}}"
     - "{{defense_evasion.id}}"
     - "{{impact.id}}"
 
@@ -659,12 +681,29 @@
   id: AML.T0036
   name: Data from Information Repositories
   object-type: technique
+  ATT&CK-reference:
+    id: T1213
+    url: https://attack.mitre.org/techniques/T1213/
   description: |
     Adversaries may leverage information repositories to mine valuable information.
     Information repositories are tools that allow for storage of information, typically to facilitate collaboration or information sharing between users, and can store a wide variety of data that may aid adversaries in further objectives, or direct access to the target information.
 
     Information stored in a repository may vary based on the specific instance or environment.
     Specific common information repositories include Sharepoint, Confluence, and enterprise databases such as SQL Server.
+  tactics:
+    - "{{collection.id}}"
+
+- &local_system
+  id: AML.T0037
+  name: Data from Local System
+  object-type: technique
+  ATT&CK-reference:
+    id: T1005
+    url: https://attack.mitre.org/techniques/T1005/
+  description: |
+    Adversaries may search local system sources, such as file systems and configuration files or local databases, to find files of interest and sensitive data prior to Exfiltration.
+
+    This can include basic fingerprinting information and sensitive data such as ssh keys.
   tactics:
     - "{{collection.id}}"
 
@@ -764,3 +803,40 @@
     An adversary who has stolen a model via [{{exfiltration.name}}](/tactics/{{exfiltration.id}}) or via [{{extract_model.name}}](/techniques/{{extract_model.id}}) now has unlimited use of that service without paying the owner of the intellectual property.
   tactics:
     - "{{impact.id}}"
+
+- &sys_misuse
+  id: AML.T0048
+  name: System Misuse for External Effect
+  object-type: technique
+  description: |
+      Adversaries may abuse their access to a system to use its resources or capabilities to further their goals by causing effects outside of the victim system.
+  tactics:
+    - "{{impact.id}}"
+
+- &exploit_public_app
+  id: AML.T0049
+  name: Exploit Public-Facing Application
+  object-type: technique
+  description: |
+    Adversaries may attempt to take advantage of a weakness in an Internet-facing computer or program using software, data, or commands in order to cause unintended or unanticipated behavior. The weakness in the system can be a bug, a glitch, or a design vulnerability. These applications are often websites, but can include databases (like SQL), standard services (like SMB or SSH), network device administration and management protocols (like SNMP and Smart Install), and any other applications with Internet accessible open sockets, such as web servers and related services.
+  tactics:
+    - "{{initial_access.id}}"
+  ATT&CK-reference:
+    id: T1190
+    url: https://attack.mitre.org/techniques/T1190/
+
+- &cmd_script_interpreter
+  id: AML.T0050
+  name: Command and Scripting Interpreter
+  object-type: technique
+  description: |
+    Adversaries may abuse command and script interpreters to execute commands, scripts, or binaries. These interfaces and languages provide ways of interacting with computer systems and are a common feature across many different platforms. Most systems come with some built-in command-line interface and scripting capabilities, for example, macOS and Linux distributions include some flavor of Unix Shell while Windows installations include the Windows Command Shell and PowerShell.
+
+    There are also cross-platform interpreters such as Python, as well as those commonly associated with client applications such as JavaScript and Visual Basic.
+
+    Adversaries may abuse these technologies in various ways as a means of executing arbitrary commands. Commands and scripts can be embedded in Initial Access payloads delivered to victims as lure documents or as secondary payloads downloaded from an existing C2. Adversaries may also execute commands through interactive terminals/shells, as well as utilize various Remote Services in order to achieve remote Execution.
+  tactics:
+    - "{{execution.id}}"
+  ATT&CK-reference:
+    id: T1159
+    url: https://attack.mitre.org/techniques/T1059/
